@@ -26,5 +26,9 @@ export function useApplications() {
     return application;
   };
 
-  return { applications, createApplication };
+  const deleteApplication = (id: string) => {
+    setApplications((current) => current.filter((application) => application.id !== id));
+  };
+
+  return { applications, createApplication, deleteApplication };
 }

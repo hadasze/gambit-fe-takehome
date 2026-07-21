@@ -9,7 +9,7 @@ import { CreateApplicationForm } from "./features/applications/CreateApplication
 
 export default function App() {
   const { selectedIds, toggle, toggleAll, clear } = useSelection();
-  const { applications, createApplication } = useApplications();
+  const { applications, createApplication, deleteApplication } = useApplications();
 
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
@@ -25,6 +25,11 @@ export default function App() {
     clear();
     setDialogOpen(false);
     setExpandedAppId(application.id);
+  };
+
+  const handleDeleteApplication = (id: string) => {
+    deleteApplication(id);
+    setExpandedAppId((current) => (current === id ? null : current));
   };
 
   return (
@@ -46,6 +51,7 @@ export default function App() {
           resources={resources}
           expandedId={expandedAppId}
           onToggleExpand={(id) => setExpandedAppId((current) => (current === id ? null : id))}
+          onDelete={handleDeleteApplication}
         />
       </main>
 

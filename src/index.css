@@ -406,10 +406,18 @@ button {
   overflow: hidden;
 }
 
-.list__header {
+.list__row {
   width: 100%;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  gap: 4px;
+}
+
+.list__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   background: transparent;
@@ -419,9 +427,41 @@ button {
   text-align: left;
 }
 
+.list__actions {
+  display: flex;
+  align-items: center;
+  padding: 0 10px 0 0;
+}
+
+.list__delete {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.list__delete:hover {
+  color: var(--tone-red);
+  background: var(--tone-red-bg);
+}
+
 .list__title {
-  display: block;
   font-weight: 500;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list__subheader {
+  padding: 0 12px 10px;
+  margin-top: -6px;
 }
 
 .list__meta {
@@ -436,6 +476,9 @@ button {
 }
 
 .list__chevron {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
   color: var(--text-muted);
   font-size: 18px;
 }
