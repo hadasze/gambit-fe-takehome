@@ -4,7 +4,13 @@ export interface Column<T> {
   key: string;
   header: string;
   render: (row: T) => ReactNode;
-  align?: "left" | "right";
+  align?: "left" | "center" | "right";
+}
+
+function alignClass(align?: "left" | "center" | "right"): string | undefined {
+  if (align === "right") return "text-right";
+  if (align === "center") return "text-center";
+  return undefined;
 }
 
 interface TableProps<T> {
@@ -53,7 +59,7 @@ export function Table<T>({
             </th>
           )}
           {columns.map((column) => (
-            <th key={column.key} className={column.align === "right" ? "text-right" : undefined}>
+            <th key={column.key} className={alignClass(column.align)}>
               {column.header}
             </th>
           ))}
@@ -76,7 +82,7 @@ export function Table<T>({
                 </td>
               )}
               {columns.map((column) => (
-                <td key={column.key} className={column.align === "right" ? "text-right" : undefined}>
+                <td key={column.key} className={alignClass(column.align)}>
                   {column.render(row)}
                 </td>
               ))}

@@ -33,7 +33,7 @@ export const resourceColumns: Column<Resource>[] = [
   {
     key: "openIssues",
     header: "Open issues",
-    align: "right",
+    align: "center",
     render: (resource) => (resource.openIssues > 0 ? resource.openIssues : "–"),
   },
 ];
