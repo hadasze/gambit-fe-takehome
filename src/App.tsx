@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { resources } from "./data/resources";
-import { useResourceFilters } from "./hooks/useResourceFilters";
 import { useSelection } from "./hooks/useSelection";
 import { useApplications } from "./hooks/useApplications";
-import { FilterBar } from "./components/FilterBar";
-import { ResourceTable } from "./components/ResourceTable";
-import { SelectionActionBar } from "./components/SelectionActionBar";
-import { CreateApplicationDialog } from "./components/CreateApplicationDialog";
-import { ApplicationsList } from "./components/ApplicationsList";
+import { ActionBar, Dialog } from "./components";
+import { ResourcesPanel } from "./features/resources/ResourcesPanel";
+import { ApplicationsPanel } from "./features/applications/ApplicationsPanel";
+import { CreateApplicationForm } from "./features/applications/CreateApplicationForm";
 
 export default function App() {
-  const { filters, updateFilter, resetFilters, filteredResources } = useResourceFilters(resources);
   const { selectedIds, toggle, toggleAll, clear } = useSelection();
   const { applications, createApplication } = useApplications();
 
@@ -38,46 +35,42 @@ export default function App() {
       </header>
 
       <main className="app__layout">
-        <section className="app__resources">
-          <FilterBar
-            filters={filters}
-            onChange={updateFilter}
-            onReset={resetFilters}
-            resultCount={filteredResources.length}
-          />
-          <ResourceTable
-            resources={filteredResources}
-            selectedIds={selectedIds}
-            onToggle={toggle}
-            onToggleAll={toggleAll}
-          />
-        </section>
-
-        <aside className="app__applications">
-          <h2>Applications</h2>
-          <ApplicationsList
-            applications={applications}
-            resources={resources}
-            expandedId={expandedAppId}
-            onToggleExpand={(id) => setExpandedAppId((current) => (current === id ? null : id))}
-          />
-        </aside>
+        <ResourcesPanel
+          resources={resources}
+          selectedIds={selectedIds}
+          onToggleRow={toggle}
+          onToggleAll={toggleAll}
+        />
+        <ApplicationsPanel
+          applications={applications}
+          resources={resources}
+          expandedId={expandedAppId}
+          onToggleExpand={(id) => setExpandedAppId((current) => (current === id ? null : id))}
+        />
       </main>
 
       {selectedIds.size > 0 && (
-        <SelectionActionBar
-          selectedCount={selectedIds.size}
-          onCreateClick={() => setDialogOpen(true)}
-          onClear={clear}
+        <ActionBar
+          message={`${selectedIds.size} resource${selectedIds.size === 1 ? "" : "s"} selected`}
+          primaryLabel="Create Application"
+          onPrimary={() => setDialogOpen(true)}
+          secondaryLabel="Clear"
+          onSecondary={clear}
         />
       )}
 
       {isDialogOpen && (
-        <CreateApplicationDialog
-          selectedResources={selectedResources}
-          onCreate={handleCreateApplication}
+        <Dialog
+          title="New Application"
+          subtitle={`Grouping ${selectedResources.length} resource${selectedResources.length === 1 ? "" : "s"}`}
           onClose={() => setDialogOpen(false)}
-        />
+        >
+          <CreateApplicationForm
+            selectedResources={selectedResources}
+            onCreate={handleCreateApplication}
+            onCancel={() => setDialogOpen(false)}
+          />
+        </Dialog>
       )}
     </div>
   );
