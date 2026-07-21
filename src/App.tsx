@@ -4,7 +4,7 @@ import { useSelection } from "./hooks/useSelection";
 import { useApplications } from "./hooks/useApplications";
 import { ActionBar, Dialog } from "./components";
 import { ResourcesPanel } from "./features/resources/ResourcesPanel";
-import { ApplicationsPanel } from "./features/applications/ApplicationsPanel";
+import { ApplicationsDashboard } from "./features/applications/ApplicationsDashboard";
 import { CreateApplicationForm } from "./features/applications/CreateApplicationForm";
 
 export default function App() {
@@ -12,24 +12,17 @@ export default function App() {
   const { applications, createApplication, deleteApplication } = useApplications();
 
   const [isDialogOpen, setDialogOpen] = useState(false);
-  const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
   const selectedResources = resources.filter((resource) => selectedIds.has(resource.id));
 
   const handleCreateApplication = (name: string, description: string) => {
-    const application = createApplication({
+    createApplication({
       name,
       description,
       resourceIds: Array.from(selectedIds),
     });
     clear();
     setDialogOpen(false);
-    setExpandedAppId(application.id);
-  };
-
-  const handleDeleteApplication = (id: string) => {
-    deleteApplication(id);
-    setExpandedAppId((current) => (current === id ? null : current));
   };
 
   return (
@@ -46,13 +39,7 @@ export default function App() {
           onToggleRow={toggle}
           onToggleAll={toggleAll}
         />
-        <ApplicationsPanel
-          applications={applications}
-          resources={resources}
-          expandedId={expandedAppId}
-          onToggleExpand={(id) => setExpandedAppId((current) => (current === id ? null : id))}
-          onDelete={handleDeleteApplication}
-        />
+        <ApplicationsDashboard applications={applications} resources={resources} onDelete={deleteApplication} />
       </main>
 
       {selectedIds.size > 0 && (

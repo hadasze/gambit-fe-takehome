@@ -1,4 +1,10 @@
-import { computeRingMetrics, layoutCircle, truncateLabel } from "../utils/graphLayout";
+import { useMemo } from "react";
+import { Background, Controls, ReactFlow, type Edge } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { computeForceLayout } from "../utils/forceLayout";
+import { CenterNode, type CenterNodeType } from "./graph/CenterNode";
+import { MemberNode, type MemberNodeType } from "./graph/MemberNode";
+import { FloatingEdge } from "./graph/FloatingEdge";
 import type { BadgeTone } from "./Badge";
 
 export interface GraphNode {
@@ -12,54 +18,73 @@ interface GraphProps {
   nodes: GraphNode[];
 }
 
-const CENTER_RADIUS = 34;
-const MARGIN = 50;
+const CENTER_SIZE = { width: 170, height: 52 };
+const MEMBER_SIZE = { width: 150, height: 40 };
 
-// Generic radial graph: one center node connected to a ring of member nodes.
-// The ring radius and node size adapt to the node count so it stays legible
-// whether there are 3 members or 30.
-export function Graph({ centerLabel, nodes }: GraphProps) {
-  const { radius, nodeRadius, labelMaxChars } = computeRingMetrics(nodes.length);
-  const half = radius + nodeRadius + MARGIN;
-  const center = { x: half, y: half };
-  const positions = layoutCircle(center, radius, nodes.length);
+const nodeTypes = { center: CenterNode, member: MemberNode };
+const edgeTypes = { floating: FloatingEdge };
+
+// Renders a hub-and-spoke graph on React Flow: a force simulation
+// (computeForceLayout) spaces the nodes so they never overlap, and
+// fitView/pan/zoom keep it legible whether there are 3 members or 50.
+export function Graph({ centerLabel, nodes: memberNodes }: GraphProps) {
+  const { nodes, edges } = useMemo(() => {
+    const layout = computeForceLayout(
+      Math.max(CENTER_SIZE.width, CENTER_SIZE.height) / 2,
+      memberNodes.map((member) => ({ id: member.id, radius: Math.max(MEMBER_SIZE.width, MEMBER_SIZE.height) / 2 })),
+    );
+
+    const centerNode: CenterNodeType = {
+      id: layout.center.id,
+      type: "center",
+      position: { x: layout.center.x - CENTER_SIZE.width / 2, y: layout.center.y - CENTER_SIZE.height / 2 },
+      data: { label: centerLabel },
+      style: CENTER_SIZE,
+      draggable: false,
+      selectable: false,
+    };
+
+    const memberFlowNodes: MemberNodeType[] = layout.members.map((position, index) => ({
+      id: position.id,
+      type: "member",
+      position: { x: position.x - MEMBER_SIZE.width / 2, y: position.y - MEMBER_SIZE.height / 2 },
+      data: { label: memberNodes[index].label, tone: memberNodes[index].tone },
+      style: MEMBER_SIZE,
+      draggable: false,
+      selectable: false,
+    }));
+
+    const flowEdges: Edge[] = memberNodes.map((member) => ({
+      id: `edge-${member.id}`,
+      source: layout.center.id,
+      target: member.id,
+      type: "floating",
+    }));
+
+    return { nodes: [centerNode, ...memberFlowNodes], edges: flowEdges };
+  }, [centerLabel, memberNodes]);
 
   return (
-    <svg className="graph" viewBox={`0 0 ${half * 2} ${half * 2}`} role="img" aria-label={`${centerLabel} graph`}>
-      {nodes.map((node, index) => (
-        <line
-          key={`edge-${node.id}`}
-          x1={center.x}
-          y1={center.y}
-          x2={positions[index].x}
-          y2={positions[index].y}
-          className="graph__edge"
-        />
-      ))}
-
-      {nodes.map((node, index) => {
-        const point = positions[index];
-        const anchor = point.x < center.x - 10 ? "end" : point.x > center.x + 10 ? "start" : "middle";
-        return (
-          <g key={node.id}>
-            <title>{node.label}</title>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={nodeRadius}
-              className={`graph__node graph__node--${node.tone ?? "neutral"}`}
-            />
-            <text x={point.x} y={point.y + nodeRadius + 14} textAnchor={anchor} className="graph__label">
-              {truncateLabel(node.label, labelMaxChars)}
-            </text>
-          </g>
-        );
-      })}
-
-      <circle cx={center.x} cy={center.y} r={CENTER_RADIUS} className="graph__center" />
-      <text x={center.x} y={center.y} textAnchor="middle" className="graph__center-label">
-        {truncateLabel(centerLabel, 16)}
-      </text>
-    </svg>
+    <div className="graph" role="img" aria-label={`${centerLabel} graph`}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        fitView
+        fitViewOptions={{ padding: 0.3 }}
+        minZoom={0.1}
+        maxZoom={2}
+        proOptions={{ hideAttribution: true }}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        zoomOnScroll={false}
+        panOnScroll={false}
+      >
+        <Background gap={16} />
+        <Controls showInteractive={false} />
+      </ReactFlow>
+    </div>
   );
 }
